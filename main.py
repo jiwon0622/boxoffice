@@ -83,7 +83,7 @@ for col in numeric_columns:
     if col in df.columns:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
 
-# 7. 1위 영화 지표 카드 (Metrics) 및 나무위키 이동 링크 버튼
+# 7. 1위 영화 지표 카드 (Metrics) 및 나무위키 바로가기
 top_1 = df.iloc[0]
 
 raw_top_1_name = top_1['movieNm']
@@ -91,15 +91,15 @@ top_1_name = raw_top_1_name
 if top_1['audiAcc'] >= 1_000_000:
     top_1_name += " 🏆"
 
-# 제목과 나무위키 이동 버튼을 한 줄에 배치
 head_col1, head_col2 = st.columns([4, 1])
 
 with head_col1:
     st.subheader(f"🥇 1위 영화: {top_1_name}")
 
 with head_col2:
-    encoded_movie_name = urllib.parse.quote(f"{raw_top_1_name} (영화)")
-    namu_url = f"https://namu.wiki/w/{encoded_movie_name}"
+    # 나무위키 바로가기 (/go/ 경로로 연결하여 자동 매칭)
+    encoded_movie_name = urllib.parse.quote(raw_top_1_name)
+    namu_url = f"https://namu.wiki/go/{encoded_movie_name}"
     st.link_button("⭐ 나무위키 보기", namu_url)
 
 col1, col2, col3 = st.columns(3)
@@ -133,7 +133,7 @@ with col3:
 
 st.divider()
 
-# 8. 관객수 상위 5편 막대그래프 (안정적인 데이터 가공 방식)
+# 8. 관객수 상위 5편 막대그래프
 st.subheader("📊 관객수 TOP 5")
 
 top_5_df = df.head(5).copy()
