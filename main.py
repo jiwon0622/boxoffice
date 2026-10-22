@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 import streamlit as st
 import urllib.parse
-import altair as alt  # 별 이펙트 차트 구현용 추가
+import altair as alt
 
 # 1. 페이지 기본 설정
 st.set_page_config(
@@ -102,4 +102,40 @@ with head_col2:
     namu_url = f"https://namu.wiki/go/{encoded_movie_name}"
     st.link_button("⭐ 나무위키 보기", namu_url)
 
-col1, col2
+col1, col2, col3 = st.columns(3)
+
+rank_change = top_1['rankInten']
+if rank_change > 0:
+    delta_str = f"🔺 {rank_change} 상승"
+elif rank_change < 0:
+    delta_str = f"🔹 {abs(rank_change)} 하락"
+else:
+    delta_str = "변동 없음"
+
+with col1:
+    st.metric(
+        label="당일 관객수",
+        value=f"{top_1['audiCnt']:,} 명",
+        delta=delta_str
+    )
+
+with col2:
+    st.metric(
+        label="누적 관객수",
+        value=f"{top_1['audiAcc']:,} 명"
+    )
+
+with col3:
+    st.metric(
+        label="스크린수",
+        value=f"{top_1['scrnCnt']:,} 개"
+    )
+
+st.divider()
+
+# 8. 관객수 상위 5편 막대그래프 (1위 영화 상단 별 이펙트 추가)
+st.subheader("📊 관객수 TOP 5")
+
+top_5_df = df.head(5).copy()
+
+top_5_df['is_top1'] = top_5_df['rank'] == 1
