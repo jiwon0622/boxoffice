@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import streamlit as st
 import urllib.parse
+import altair as alt  # 별 이펙트 차트 구현용 추가
 
 # 1. 페이지 기본 설정
 st.set_page_config(
@@ -97,85 +98,8 @@ with head_col1:
     st.subheader(f"🥇 1위 영화: {top_1_name}")
 
 with head_col2:
-    # 나무위키 바로가기 (/go/ 경로로 연결하여 자동 매칭)
     encoded_movie_name = urllib.parse.quote(raw_top_1_name)
     namu_url = f"https://namu.wiki/go/{encoded_movie_name}"
     st.link_button("⭐ 나무위키 보기", namu_url)
 
-col1, col2, col3 = st.columns(3)
-
-rank_change = top_1['rankInten']
-if rank_change > 0:
-    delta_str = f"🔺 {rank_change} 상승"
-elif rank_change < 0:
-    delta_str = f"🔹 {abs(rank_change)} 하락"
-else:
-    delta_str = "변동 없음"
-
-with col1:
-    st.metric(
-        label="당일 관객수",
-        value=f"{top_1['audiCnt']:,} 명",
-        delta=delta_str
-    )
-
-with col2:
-    st.metric(
-        label="누적 관객수",
-        value=f"{top_1['audiAcc']:,} 명"
-    )
-
-with col3:
-    st.metric(
-        label="스크린수",
-        value=f"{top_1['scrnCnt']:,} 개"
-    )
-
-st.divider()
-
-# 8. 관객수 상위 5편 막대그래프
-st.subheader("📊 관객수 TOP 5")
-
-top_5_df = df.head(5).copy()
-chart_df = pd.DataFrame({
-    "영화명": top_5_df["movieNm"],
-    "관객수": top_5_df["audiCnt"]
-}).set_index("영화명")
-
-st.bar_chart(chart_df)
-
-st.divider()
-
-# 9. 전체 박스오피스 순위 표
-st.subheader("📋 전체 박스오피스 순위")
-
-def get_display_movie_name(row):
-    name = str(row['movieNm'])
-    if row['audiAcc'] >= 1_000_000:
-        name += " 🏆"
-    return name
-
-def get_rank_change_str(rank_inten):
-    if rank_inten > 0:
-        return f"🔺 {rank_inten}"
-    elif rank_inten < 0:
-        return f"🔹 {abs(rank_inten)}"
-    return "-"
-
-df['영화명(가공)'] = df.apply(get_display_movie_name, axis=1)
-df['순위변동'] = df['rankInten'].apply(get_rank_change_str)
-
-display_df = pd.DataFrame({
-    "순위": df["rank"],
-    "변동": df["순위변동"],
-    "영화명": df["영화명(가공)"],
-    "개봉일": df["openDt"],
-    "관객수": df["audiCnt"].apply(lambda x: f"{x:,}"),
-    "누적관객": df["audiAcc"].apply(lambda x: f"{x:,}"),
-    "스크린수": df["scrnCnt"].apply(lambda x: f"{x:,}")
-})
-
-st.dataframe(
-    display_df,
-    hide_index=True
-)
+col1, col2
