@@ -3,6 +3,7 @@ import pytz
 import requests
 import pandas as pd
 import streamlit as st
+import altair as alt  # 막대 그래프 색상 지정을 위해 추가
 
 # 1. 페이지 기본 설정
 st.set_page_config(
@@ -10,6 +11,35 @@ st.set_page_config(
     page_icon="🎬",
     layout="wide"
 )
+
+# --- [UI 디자인 변경: 다크 테마 커스텀 CSS 적용] ---
+st.markdown("""
+    <style>
+    /* 메인 및 사이드바 배경 검정색 설정 */
+    .stApp, [data-testid="stSidebar"] {
+        background-color: #0E1117 !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* 카드 및 메트릭 박스 어두운 스타일 지정 */
+    div[data-testid="stMetric"] {
+        background-color: #1E222D;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #313745;
+    }
+    
+    /* 텍스트 색상 보정 */
+    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
+        color: #FFFFFF !important;
+    }
+    
+    /* 구분선 색상 */
+    hr {
+        border-color: #313745 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("🎬 일별 박스오피스 조회")
 
@@ -122,16 +152,24 @@ with col3:
 
 st.divider()
 
-# 8. 관객수 상위 5편 막대그래프 (안정적인 데이터 가공 방식)
+# 8. 관객수 상위 5편 막대그래프 (노란색 차트로 변경)
 st.subheader("📊 관객수 TOP 5")
 
 top_5_df = df.head(5).copy()
-chart_df = pd.DataFrame({
-    "영화명": top_5_df["movieNm"],
-    "관객수": top_5_df["audiCnt"]
-}).set_index("영화명")
 
-st.bar_chart(chart_df)
+# Altair 라이브러리를 사용하여 그래프 색상을 노란색(#FFD700)으로 설정
+chart = (
+    alt.Chart(top_5_df)
+    .mark_bar(color="#FFD700")  # 노란색 적용
+    .encode(
+        x=alt.X("movieNm:N", title="영화명", sort=None),
+        y=alt.Y("audiCnt:Q", title="관객수"),
+        tooltip=["movieNm", "audiCnt"]
+    )
+    .properties(height=400)
+)
+
+st.altair_chart(chart, use_container_width=True)
 
 st.divider()
 
@@ -169,5 +207,6 @@ display_df = pd.DataFrame({
 # Streamlit 버전에 구애받지 않도록 화면 너비 맞춤 설정
 st.dataframe(
     display_df,
-    hide_index=True
+    hide_index=True,
+    use_container_width=True
 )
