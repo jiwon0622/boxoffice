@@ -4,7 +4,6 @@ import requests
 import pandas as pd
 import streamlit as st
 import urllib.parse
-import altair as alt
 
 # 1. 페이지 기본 설정
 st.set_page_config(
@@ -133,9 +132,56 @@ with col3:
 
 st.divider()
 
-# 8. 관객수 상위 5편 막대그래프 (1위 영화 상단 별 이펙트 추가)
+# 8. 관객수 상위 5편 막대그래프 (1위 영화 제목에 별 이펙트 적용)
 st.subheader("📊 관객수 TOP 5")
 
 top_5_df = df.head(5).copy()
 
-top_5_df['is_top1'] = top_5_df['rank'] == 1
+# 1위 영화 막대 이름에 별(⭐) 강조 표시 추가
+top_5_df['chart_movie_name'] = top_5_df.apply(
+    lambda row: f"⭐ {row['movieNm']} (1위)" if row['rank'] == 1 else row['movieNm'], 
+    axis=1
+)
+
+chart_df = pd.DataFrame({
+    "영화명": top_5_df["chart_movie_name"],
+    "관객수": top_5_df["audiCnt"]
+}).set_index("영화명")
+
+st.bar_chart(chart_df)
+
+st.divider()
+
+# 9. 전체 박스오피스 순위 표
+st.subheader("📋 전체 박스오피스 순위")
+
+def get_display_movie_name(row):
+    name = str(row['movieNm'])
+    if row['audiAcc'] >= 1_000_000:
+        name += " 🏆"
+    return name
+
+def get_rank_change_str(rank_inten):
+    if rank_inten > 0:
+        return f"🔺 {rank_inten}"
+    elif rank_inten < 0:
+        return f"🔹 {abs(rank_inten)}"
+    return "-"
+
+df['영화명(가공)'] = df.apply(get_display_movie_name, axis=1)
+df['순위변동'] = df['rankInten'].apply(get_rank_change_str)
+
+display_df = pd.DataFrame({
+    "순위": df["rank"],
+    "변동": df["순위변동"],
+    "영화명": df["영화명(가공)"],
+    "개봉일": df["openDt"],
+    "관객수": df["audiCnt"].apply(lambda x: f"{x:,}"),
+    "누적관객": df["audiAcc"].apply(lambda x: f"{x:,}"),
+    "스크린수": df["scrnCnt"].apply(lambda x: f"{x:,}")
+})
+
+st.dataframe(
+    display_df,
+    hide_index=True
+)
